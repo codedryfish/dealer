@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>D.E.A.L.E.R.</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <span class="logo">♠ D.E.A.L.E.R.</span>
+      <nav>
+        <button class="nav-btn active" data-view="game">Game</button>
+        <button class="nav-btn" data-view="stats">Stats</button>
+        <button class="nav-btn" data-view="history">History</button>
+        <button class="nav-btn" data-view="admin">Admin</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======= GAME VIEW ======= -->
+    <div id="view-game" class="view active">
+      <div class="phase-badge" id="phase-badge">IDLE</div>
+      <div class="pot-display">
+        <span class="pot-label">POT</span>
+        <span class="pot-amount" id="pot-amount">0</span>
+      </div>
+
+      <!-- Community cards -->
+      <div class="community-area">
+        <div class="cards-row" id="community-cards"></div>
+      </div>
+
+      <!-- Player rows -->
+      <div class="players-area" id="players-area"></div>
+
+      <!-- Action panel (human player) -->
+      <div class="action-panel" id="action-panel" style="display:none">
+        <div class="action-label">YOUR TURN</div>
+        <div class="action-buttons">
+          <button class="action-btn fold" id="btn-fold">FOLD</button>
+          <button class="action-btn call" id="btn-call">CALL <span id="call-amount"></span></button>
+          <button class="action-btn check" id="btn-check">CHECK</button>
+        </div>
+        <div class="raise-area">
+          <button class="action-btn raise" id="btn-raise">RAISE</button>
+          <input type="range" id="raise-slider" min="0" max="1000" value="200" />
+          <span id="raise-amount">200</span>
+        </div>
+      </div>
+
+      <!-- Status message -->
+      <div class="status-msg" id="status-msg"></div>
+    </div>
+
+    <!-- ======= STATS VIEW ======= -->
+    <div id="view-stats" class="view">
+      <h2>Session Stats</h2>
+      <div class="stats-grid" id="stats-grid">
+        <p class="muted">Play some hands to see stats here.</p>
+      </div>
+    </div>
+
+    <!-- ======= HISTORY VIEW ======= -->
+    <div id="view-history" class="view">
+      <h2>Hand History</h2>
+      <div id="hand-history-list">
+        <p class="muted">No hands played yet.</p>
+      </div>
+    </div>
+
+    <!-- ======= ADMIN VIEW ======= -->
+    <div id="view-admin" class="view">
+      <h2>Admin</h2>
+
+      <div class="admin-section">
+        <label>Mode</label>
+        <div class="btn-group">
+          <button class="mode-btn active" data-mode="observer">Observer</button>
+          <button class="mode-btn" data-mode="player">Player</button>
+          <button class="mode-btn" data-mode="training">Training</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <label>Agent Alpha Profile</label>
+        <select id="profile-A"></select>
+      </div>
+
+      <div class="admin-section">
+        <label>Agent Beta Profile</label>
+        <select id="profile-B"></select>
+      </div>
+
+      <div class="admin-section">
+        <label>Blinds</label>
+        <div class="blind-row">
+          <input type="number" id="sb-input" placeholder="SB" value="50" min="1" />
+          <span>/</span>
+          <input type="number" id="bb-input" placeholder="BB" value="100" min="2" />
+          <button id="btn-set-blinds">Set</button>
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <button class="new-hand-btn" id="btn-new-hand">▶ NEW HAND</button>
+      </div>
+
+      <div class="admin-section">
+        <div class="connection-status" id="connection-status">⚡ Connecting…</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

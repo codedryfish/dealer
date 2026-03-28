@@ -1,0 +1,21 @@
+[Unit]
+Description=D.E.A.L.E.R. Poker API Server
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/dealer/pi
+ExecStart=/opt/dealer/venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 1
+Restart=always
+RestartSec=5
+Environment=DEALER_MODE=observer
+Environment=DEALER_SB=50
+Environment=DEALER_BB=100
+Environment=DEALER_STACK=1000
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
