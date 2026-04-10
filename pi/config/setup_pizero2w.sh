@@ -1,25 +1,33 @@
 #!/bin/bash
-# setup_pi_4b.sh — D.E.A.L.E.R. provisioning for Raspberry Pi 4B (Bookworm)
+# setup_pizero2w.sh — D.E.A.L.E.R. provisioning for Raspberry Pi Zero 2W (Bookworm)
 #
-# No ethernet required — runs over home WiFi, then switches wlan0 to DEALER AP on reboot.
+# Prerequisites — done BEFORE running this script:
+#   1. Flashed Raspberry Pi OS Lite (32-bit, Bookworm) via Raspberry Pi Imager
+#      with: hostname=dealer, SSH enabled, user=pi, home WiFi configured
+#   2. SD card edited before first boot to enable USB gadget mode:
+#        /boot/firmware/config.txt  → added:  dtoverlay=dwc2
+#        /boot/firmware/cmdline.txt → added after rootwait:  modules-load=dwc2,g_ether
+#   3. Connected Pi Zero 2W to Mac via USB DATA port (not PWR IN)
+#   4. SSH'd in over USB gadget: ssh pi@dealer.local
+#   5. Repo cloned: sudo git clone https://github.com/codedryfish/dealer.git /opt/dealer
 #
-# Differences from setup_pi.sh (Pi Zero 2W):
-#   - Uses NetworkManager (nmcli) instead of hostapd/dhcpcd
-#   - Skips USB gadget mode entirely
-#   - All apt/pip installs happen BEFORE touching WiFi config (preserves internet)
-#   - WiFi is switched to AP mode as the last step before reboot
+# What this script does:
+#   - Installs all packages while still on home WiFi (internet intact)
+#   - Sets up Python venv, systemd service, mDNS
+#   - Switches wlan0 from home WiFi → DEALER AP as the final step
+#   - Reboots
 #
 # After reboot:
-#   - wlan0 becomes the DEALER AP (SSID=DEALER, 192.168.4.1)
-#   - SSH via: connect laptop to DEALER WiFi → ssh pi@192.168.4.1
+#   - SSH still works over USB cable: ssh pi@dealer.local  (USB gadget persists)
+#   - wlan0 = DEALER AP (SSID=DEALER, 192.168.4.1) for ESP32 stations
 #   - API at: http://192.168.4.1:8000
 #
-# Run as root: sudo bash /opt/dealer/pi/config/setup_pi_4b.sh
+# Run as root: sudo bash /opt/dealer/pi/config/setup_pizero2w.sh
 
 set -e
 
-echo "=== D.E.A.L.E.R. Pi 4B Setup ==="
-echo "    (Running over home WiFi — do not disconnect)"
+echo "=== D.E.A.L.E.R. Pi Zero 2W Setup ==="
+echo "    (SSH over USB gadget — home WiFi used for internet during install)"
 echo ""
 
 # ── 1. System update ────────────────────────────────────────────────────────
@@ -44,7 +52,6 @@ echo "[4/7] Configuring Python path..."
 grep -q "PYTHONPATH" /opt/dealer/venv/bin/activate || \
   echo "export PYTHONPATH=/opt/dealer/pi" >> /opt/dealer/venv/bin/activate
 
-# Inject PYTHONPATH into the systemd service if not already there
 grep -q "PYTHONPATH" /opt/dealer/pi/config/dealer.service || \
   sed -i '/\[Service\]/a Environment=PYTHONPATH=/opt/dealer/pi' \
     /opt/dealer/pi/config/dealer.service
@@ -63,16 +70,15 @@ echo "[6/7] Setting permissions..."
 chown -R pi:pi /opt/dealer
 
 # ── 7. Switch wlan0 to DEALER AP ────────────────────────────────────────────
-# Done LAST so all internet-dependent steps above complete successfully.
-# SSH will drop after this step — that's expected. Pi reboots immediately.
-echo "[7/7] Configuring DEALER WiFi AP (this will drop your SSH connection)..."
+# Done LAST — preserves home WiFi (internet) for all steps above.
+# SSH is over USB gadget (usb0), so this does NOT drop your connection.
+echo "[7/7] Configuring DEALER WiFi AP on wlan0..."
 
-# Remove existing wlan0 client connections
 nmcli con delete "preconfigured" 2>/dev/null || true
 nmcli con delete "dealer-ap"     2>/dev/null || true
 
-# Create AP: SSID=DEALER, WPA2, IP=192.168.4.1
-# ipv4.method shared = NM runs its own DHCP for connecting clients (ESP32s)
+# SSID=DEALER, WPA2, static IP=192.168.4.1
+# ipv4.method shared = NM handles DHCP for ESP32 clients
 nmcli con add type wifi ifname wlan0 con-name dealer-ap ssid DEALER
 nmcli con modify dealer-ap \
   802-11-wireless.mode ap \
@@ -85,9 +91,9 @@ nmcli con modify dealer-ap \
 
 echo ""
 echo "=== Setup complete! Rebooting in 5 seconds... ==="
-echo "    After reboot:"
-echo "    1. Connect your laptop to WiFi: DEALER / dealermeplease"
-echo "    2. SSH:  ssh pi@192.168.4.1"
-echo "    3. API:  http://192.168.4.1:8000/api/health"
+echo "    After reboot (USB cable stays connected):"
+echo "    SSH:  ssh pi@dealer.local        (over USB gadget)"
+echo "    AP:   SSID=DEALER / dealermeplease  (for ESP32s)"
+echo "    API:  http://192.168.4.1:8000/api/health"
 sleep 5
 reboot
