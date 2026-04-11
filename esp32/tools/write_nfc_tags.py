@@ -8,7 +8,6 @@ Usage (from Mac, via mpremote):
   mpremote connect /dev/tty.usbmodemXXXX run esp32/tools/write_nfc_tags.py
 """
 import time
-from machine import SPI, Pin
 
 try:
     from mfrc522 import MFRC522
@@ -17,11 +16,11 @@ except ImportError:
     print("mfrc522 library not available. Running in simulation mode.")
     MFRC522_AVAILABLE = False
 
-# Pin config (same as station)
+# Pin config (same as station — ESP32-S3 safe pins)
 PIN_SS   = 5
 PIN_SCK  = 18
-PIN_MOSI = 23
-PIN_MISO = 19
+PIN_MOSI = 11  # Was 23 — does not exist on ESP32-S3
+PIN_MISO = 13  # Was 19 — USB D- on ESP32-S3
 PIN_RST  = 4
 
 # Full 52-card deck in programming order
@@ -85,9 +84,14 @@ def write_tag(reader, data: str):
 
 def run():
     if MFRC522_AVAILABLE:
-        spi = SPI(1, baudrate=2500000, polarity=0, phase=0,
-                  sck=Pin(PIN_SCK), mosi=Pin(PIN_MOSI), miso=Pin(PIN_MISO))
-        reader = MFRC522(spi=spi, gpioCs=Pin(PIN_SS, Pin.OUT), gpioRst=Pin(PIN_RST, Pin.OUT))
+        # wendlers/micropython-mfrc522 takes raw pin numbers and builds SPI internally
+        reader = MFRC522(
+            sck=PIN_SCK,
+            mosi=PIN_MOSI,
+            miso=PIN_MISO,
+            rst=PIN_RST,
+            cs=PIN_SS,
+        )
     else:
         reader = None
 

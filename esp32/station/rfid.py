@@ -7,7 +7,6 @@ Uses the mfrc522 MicroPython library (must be uploaded to the ESP32).
 Card IDs stored on tags: Rank (2-9,T,J,Q,K,A) + Suit (H,D,C,S)
 """
 import time
-from machine import SPI, Pin
 from config import PIN_RFID_SS, PIN_RFID_SCK, PIN_RFID_MOSI, PIN_RFID_MISO, PIN_RFID_RST
 
 try:
@@ -25,11 +24,14 @@ VALID_SUITS = set("HDCS")
 class RFIDReader:
     def __init__(self):
         if _MFRC522_AVAILABLE:
-            spi = SPI(1, baudrate=2500000, polarity=0, phase=0,
-                      sck=Pin(PIN_RFID_SCK), mosi=Pin(PIN_RFID_MOSI), miso=Pin(PIN_RFID_MISO))
-            cs = Pin(PIN_RFID_SS, Pin.OUT)
-            rst = Pin(PIN_RFID_RST, Pin.OUT)
-            self._reader = MFRC522(spi=spi, gpioCs=cs, gpioRst=rst)
+            # wendlers/micropython-mfrc522 takes raw pin numbers and builds SPI internally
+            self._reader = MFRC522(
+                sck=PIN_RFID_SCK,
+                mosi=PIN_RFID_MOSI,
+                miso=PIN_RFID_MISO,
+                rst=PIN_RFID_RST,
+                cs=PIN_RFID_SS,
+            )
         else:
             self._reader = None
 
