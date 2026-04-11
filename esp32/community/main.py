@@ -28,17 +28,19 @@ STATION_ID = "C"
 POLL_INTERVAL = 0.5
 
 # Community station pin assignments
+# NOTE: GPIO 19/20 = USB D-/D+. GPIO 22-25 don't exist on ESP32-S3.
+#       GPIO 26-32 = internal flash on WROOM-1 module — do not use.
 PIN_RFID_SS   = 5
 PIN_RFID_SCK  = 18
-PIN_RFID_MOSI = 23
-PIN_RFID_MISO = 19
+PIN_RFID_MOSI = 11  # Was 23 — does not exist on ESP32-S3
+PIN_RFID_MISO = 13  # Was 19 — USB D-
 PIN_RFID_RST  = 4
 PIN_BUZZER    = 17
 
 # Human action buttons (active LOW with internal pull-up)
-PIN_BTN_FOLD  = 25
-PIN_BTN_CALL  = 26
-PIN_BTN_RAISE = 27
+PIN_BTN_FOLD  = 6   # Was 25 — does not exist on ESP32-S3
+PIN_BTN_CALL  = 7   # Was 26 — internal flash pin
+PIN_BTN_RAISE = 8   # Was 27 — internal flash pin
 
 # Expected card counts per phase
 COMMUNITY_COUNTS = {

@@ -17,18 +17,19 @@ API_BASE = "http://192.168.4.1:8000/api"
 POLL_INTERVAL = 0.5
 
 # Pin assignments (ESP32-S3-DevKitC-1)
-# NOTE: GPIO 19 and 20 are USB D-/D+ on ESP32-S3 — do not use.
+# NOTE: GPIO 19/20 = USB D-/D+  — do not use.
+# NOTE: GPIO 22/23/24/25 do not exist on ESP32-S3.
 #
 # RFID (MFRC522) — SPI
 PIN_RFID_SS   = 5   # Chip select
 PIN_RFID_SCK  = 18
-PIN_RFID_MOSI = 23
-PIN_RFID_MISO = 13  # Changed from 19 (USB D-)
+PIN_RFID_MOSI = 11  # Was 23 — does not exist on ESP32-S3
+PIN_RFID_MISO = 13  # Was 19 — USB D-
 PIN_RFID_RST  = 4
 
 # OLED (SSD1306) — I2C
 PIN_I2C_SDA = 21
-PIN_I2C_SCL = 22
+PIN_I2C_SCL = 9     # Was 22 — does not exist on ESP32-S3
 OLED_WIDTH = 128
 OLED_HEIGHT = 64
 OLED_ADDR = 0x3C
