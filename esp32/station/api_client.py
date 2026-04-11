@@ -11,7 +11,13 @@ from config import WIFI_SSID, WIFI_PASSWORD, API_BASE, STATION_ID
 def connect_wifi(max_retries=20):
     """Connect to the Pi's WiFi AP. Returns True on success."""
     wlan = network.WLAN(network.STA_IF)
+
+    # Reset the interface to clear any bad internal state from a previous boot.
+    # Without this, ESP32 sometimes raises OSError: Wifi Internal State Error.
+    wlan.active(False)
+    time.sleep_ms(200)
     wlan.active(True)
+    time.sleep_ms(100)
 
     if wlan.isconnected():
         return True
