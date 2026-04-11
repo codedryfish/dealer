@@ -71,6 +71,33 @@ curl -sSL "https://raw.githubusercontent.com/micropython/micropython-lib/master/
 echo "Libraries downloaded."
 # Note: urequests is frozen into the ESP32-S3 firmware — no download needed.
 
+# ── Patch mfrc522.py for ESP32/ESP32-S3 ─────────────────────────────────────
+# The wendlers library only handles WiPy/LoPy/FiPy and ESP8266. It raises
+# RuntimeError("Unsupported platform") on ESP32/ESP32-S3. We inject an elif
+# branch before the else so it constructs SPI(1, ...) using the Pin objects
+# already built in __init__.
+python3 - "$TMPDIR/mfrc522.py" <<'PYEOF'
+import sys
+path = sys.argv[1]
+with open(path) as f:
+    src = f.read()
+patch_old = '\telse:\n\t\traise RuntimeError("Unsupported platform")'
+patch_new = (
+    '\telif \'esp32\' in board.lower():\n'
+    '\t\tself.spi = SPI(1, baudrate=1000000, polarity=0, phase=0,\n'
+    '\t\t\tsck=self.sck, mosi=self.mosi, miso=self.miso)\n'
+    '\telse:\n'
+    '\t\traise RuntimeError("Unsupported platform")'
+)
+if patch_old in src:
+    src = src.replace(patch_old, patch_new)
+    with open(path, 'w') as f:
+        f.write(src)
+    print("  mfrc522.py patched: added ESP32/ESP32-S3 SPI support.")
+else:
+    print("  WARNING: mfrc522.py patch anchor not found — library may have changed upstream.")
+PYEOF
+
 # ── Build config.py for this station ────────────────────────────────────────
 cp esp32/station/config.py "$TMPDIR/config.py"
 # Patch STATION_ID in-place
