@@ -81,13 +81,13 @@ import sys
 path = sys.argv[1]
 with open(path) as f:
     src = f.read()
-patch_old = '\telse:\n\t\traise RuntimeError("Unsupported platform")'
+patch_old = '\t\telse:\n\t\t\traise RuntimeError("Unsupported platform")'
 patch_new = (
-    '\telif \'esp32\' in board.lower():\n'
-    '\t\tself.spi = SPI(1, baudrate=1000000, polarity=0, phase=0,\n'
-    '\t\t\tsck=self.sck, mosi=self.mosi, miso=self.miso)\n'
-    '\telse:\n'
-    '\t\traise RuntimeError("Unsupported platform")'
+    '\t\telif \'esp32\' in board.lower():\n'
+    '\t\t\tself.spi = SPI(1, baudrate=1000000, polarity=0, phase=0,\n'
+    '\t\t\t\tsck=self.sck, mosi=self.mosi, miso=self.miso)\n'
+    '\t\telse:\n'
+    '\t\t\traise RuntimeError("Unsupported platform")'
 )
 if patch_old in src:
     src = src.replace(patch_old, patch_new)
