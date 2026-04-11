@@ -104,36 +104,28 @@ cp esp32/station/config.py "$TMPDIR/config.py"
 sed -i.bak "s/^STATION_ID = .*/STATION_ID = \"$STATION\"/" "$TMPDIR/config.py"
 rm -f "$TMPDIR/config.py.bak"
 
-# ── Upload files ─────────────────────────────────────────────────────────────
-upload() {
-  local src=$1
-  local dst=$2
-  echo "  Uploading $dst..."
-  mpremote connect "$PORT" cp "$src" ":$dst"
-}
+# ── Select main.py source ────────────────────────────────────────────────────
+if [[ "$STATION" == "C" ]]; then
+  MAIN_SRC="esp32/community/main.py"
+else
+  MAIN_SRC="esp32/station/main.py"
+fi
 
 echo ""
 echo "=== Uploading firmware for Station $STATION ==="
 
-# Third-party libraries
-upload "$TMPDIR/mfrc522.py"  "mfrc522.py"
-upload "$TMPDIR/ssd1306.py"  "ssd1306.py"
-# Station config (patched with correct STATION_ID)
-upload "$TMPDIR/config.py"   "config.py"
-
-# Shared station modules
-upload "esp32/station/rfid.py"    "rfid.py"
-upload "esp32/station/display.py" "display.py"
-upload "esp32/station/leds.py"    "leds.py"
-upload "esp32/station/buzzer.py"  "buzzer.py"
-upload "esp32/station/api_client.py" "api_client.py"
-
-# Main entry point — community or station
-if [[ "$STATION" == "C" ]]; then
-  upload "esp32/community/main.py" "main.py"
-else
-  upload "esp32/station/main.py"   "main.py"
-fi
+# Upload all files in a single mpremote session using + chaining.
+# Multiple invocations cause "could not enter raw repl" on some boards.
+mpremote connect "$PORT" \
+  cp "$TMPDIR/mfrc522.py"          :mfrc522.py    + \
+  cp "$TMPDIR/ssd1306.py"          :ssd1306.py    + \
+  cp "$TMPDIR/config.py"           :config.py     + \
+  cp esp32/station/rfid.py         :rfid.py       + \
+  cp esp32/station/display.py      :display.py    + \
+  cp esp32/station/leds.py         :leds.py       + \
+  cp esp32/station/buzzer.py       :buzzer.py     + \
+  cp esp32/station/api_client.py   :api_client.py + \
+  cp "$MAIN_SRC"                   :main.py
 
 echo ""
 echo "=== Station $STATION flashed successfully! ==="
