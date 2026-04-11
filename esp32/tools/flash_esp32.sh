@@ -114,8 +114,34 @@ fi
 echo ""
 echo "=== Uploading firmware for Station $STATION ==="
 
-# Upload all files in a single mpremote session using + chaining.
-# Multiple invocations cause "could not enter raw repl" on some boards.
+# ── Step 1: Upload boot.py alone, with retries ───────────────────────────────
+# If main.py is crash-looping from a bad previous flash, mpremote can't enter
+# raw REPL. We retry until we catch the ~3s boot window. Once boot.py lands,
+# it inserts a 3-second idle delay on every boot — making future flashes safe.
+echo "  Phase 1: uploading boot.py (retry loop — press RST on the board now)..."
+MAX_ATTEMPTS=15
+for i in $(seq 1 $MAX_ATTEMPTS); do
+  printf "    attempt %d/%d... " "$i" "$MAX_ATTEMPTS"
+  if mpremote connect "$PORT" cp esp32/station/boot.py :boot.py 2>/dev/null; then
+    echo "OK"
+    break
+  fi
+  echo "no repl yet"
+  if [[ "$i" == "$MAX_ATTEMPTS" ]]; then
+    echo ""
+    echo "ERROR: Could not reach REPL after $MAX_ATTEMPTS attempts."
+    echo "       Try holding RST on the board and re-running this script."
+    exit 1
+  fi
+  sleep 1
+done
+
+# boot.py is now on the board — next reset gives a clean 3-second window.
+echo "  boot.py uploaded. Waiting for board to reboot with delay..."
+sleep 4
+
+# ── Step 2: Upload remaining files in one session ───────────────────────────
+echo "  Phase 2: uploading all firmware files..."
 mpremote connect "$PORT" \
   cp "$TMPDIR/mfrc522.py"          :mfrc522.py    + \
   cp "$TMPDIR/ssd1306.py"          :ssd1306.py    + \
