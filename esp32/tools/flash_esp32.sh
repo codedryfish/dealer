@@ -104,7 +104,7 @@ upload "esp32/station/rfid.py"    "rfid.py"
 upload "esp32/station/display.py" "display.py"
 upload "esp32/station/leds.py"    "leds.py"
 upload "esp32/station/buzzer.py"  "buzzer.py"
-upload "esp32/station/network.py" "network.py"
+upload "esp32/station/api_client.py" "api_client.py"
 
 # Main entry point — community or station
 if [[ "$STATION" == "C" ]]; then

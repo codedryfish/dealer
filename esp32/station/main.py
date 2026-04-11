@@ -14,7 +14,7 @@ import time
 import gc
 
 from config import STATION_ID, POLL_INTERVAL
-from network import connect_wifi, get_action, get_state, post_cards
+from api_client import connect_wifi, get_action, get_state, post_cards
 from rfid import RFIDReader
 from display import OLEDDisplay
 from leds import LEDRing
