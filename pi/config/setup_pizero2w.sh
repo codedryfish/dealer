@@ -74,8 +74,12 @@ chown -R pi:pi /opt/dealer
 # SSH is over USB gadget (usb0), so this does NOT drop your connection.
 echo "[7/7] Configuring DEALER WiFi AP on wlan0..."
 
-nmcli con delete "preconfigured" 2>/dev/null || true
-nmcli con delete "dealer-ap"     2>/dev/null || true
+# Delete any existing WiFi connection on wlan0 (name varies by Pi OS / imager version)
+nmcli -t -f NAME,DEVICE con show | grep ":wlan0$" | cut -d: -f1 | while read con; do
+  echo "  Removing existing wlan0 connection: $con"
+  nmcli con delete "$con" 2>/dev/null || true
+done
+nmcli con delete "dealer-ap" 2>/dev/null || true
 
 # SSID=DEALER, WPA2, static IP=192.168.4.1
 # ipv4.method shared = NM handles DHCP for ESP32 clients
