@@ -2,9 +2,10 @@
 # flash_esp32.sh — Upload D.E.A.L.E.R. MicroPython firmware to an ESP32-S3
 #
 # Usage:
-#   bash esp32/tools/flash_esp32.sh A        # Agent Alpha station
-#   bash esp32/tools/flash_esp32.sh B        # Agent Beta station
-#   bash esp32/tools/flash_esp32.sh C        # Community reader
+#   bash esp32/tools/flash_esp32.sh A                          # auto-detect port
+#   bash esp32/tools/flash_esp32.sh A /dev/cu.usbmodem101     # specify port
+#   bash esp32/tools/flash_esp32.sh B /dev/cu.usbmodem101
+#   bash esp32/tools/flash_esp32.sh C /dev/cu.usbmodem101
 #
 # Prerequisites (run once):
 #   pip3 install mpremote
@@ -14,11 +15,16 @@
 set -e
 
 STATION=${1:-}
+PORT=${2:-}
+
 if [[ "$STATION" != "A" && "$STATION" != "B" && "$STATION" != "C" ]]; then
-  echo "Usage: bash esp32/tools/flash_esp32.sh [A|B|C]"
+  echo "Usage: bash esp32/tools/flash_esp32.sh [A|B|C] [/dev/cu.usbmodemXXXX]"
   echo "  A = Agent Alpha station"
   echo "  B = Agent Beta station"
   echo "  C = Community reader"
+  echo ""
+  echo "Available ports:"
+  mpremote connect list 2>/dev/null || true
   exit 1
 fi
 
@@ -29,16 +35,24 @@ if ! command -v mpremote &>/dev/null; then
   exit 1
 fi
 
-# ── Detect connected ESP32 ───────────────────────────────────────────────────
-echo "Detecting connected ESP32..."
-PORT=$(mpremote connect list 2>/dev/null | grep -i "tty.usbmodem\|tty.SLAB\|tty.usbserial\|tty.wchusbserial" | head -1 | awk '{print $1}')
-if [[ -z "$PORT" ]]; then
-  echo "Error: No ESP32 found. Check USB connection and try again."
-  echo "Available ports:"
-  mpremote connect list
-  exit 1
+# ── Resolve port ─────────────────────────────────────────────────────────────
+if [[ -n "$PORT" ]]; then
+  echo "Using port: $PORT"
+else
+  echo "Detecting connected ESP32..."
+  PORT=$(mpremote connect list 2>/dev/null \
+    | grep -i "usbmodem\|SLAB\|usbserial\|wchusbserial" \
+    | head -1 | awk '{print $1}')
+  if [[ -z "$PORT" ]]; then
+    echo "Error: No ESP32 found. Specify the port manually:"
+    echo "  bash esp32/tools/flash_esp32.sh $STATION /dev/cu.usbmodemXXXX"
+    echo ""
+    echo "Available ports:"
+    mpremote connect list
+    exit 1
+  fi
+  echo "Found: $PORT"
 fi
-echo "Found: $PORT"
 
 # ── Download third-party libraries ──────────────────────────────────────────
 TMPDIR=$(mktemp -d)
