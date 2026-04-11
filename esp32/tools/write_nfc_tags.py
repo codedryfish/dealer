@@ -67,7 +67,10 @@ def card_display(code):
 
 
 def write_tag(reader, data: str):
-    """Write 2-byte ASCII string to NFC tag block 1."""
+    """Write 2-byte ASCII string to NTAG page 4 (first user-data page).
+    Pages 0-3 on NTAG213/215 are UID/lock/CC — do not write there.
+    No Mifare auth needed for NTAG tags.
+    """
     payload = list(data.encode("ascii")) + [0] * 14  # Pad to 16 bytes
     (stat, tag_type) = reader.request(reader.REQIDL)
     if stat != reader.OK:
@@ -75,8 +78,7 @@ def write_tag(reader, data: str):
     (stat, uid) = reader.SelectTagSN()
     if stat != reader.OK:
         return False
-    reader.auth(reader.AUTHENT1A, 1, b'\xff\xff\xff\xff\xff\xff', uid)
-    stat = reader.write(1, payload)
+    stat = reader.write(4, payload)
     reader.stop_crypto1()
     return stat == reader.OK
 

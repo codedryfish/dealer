@@ -53,9 +53,10 @@ class RFIDReader:
                 time.sleep_ms(50)
                 continue
 
-            # Read data block 1 (page 4 for NTAG213)
-            self._reader.auth(self._reader.AUTHENT1A, 1, b'\xff\xff\xff\xff\xff\xff', raw_uid)
-            (stat, data) = self._reader.read(1)
+            # Read page 4 — first user-data page on NTAG213/215.
+            # Pages 0-3 are UID / lock bytes / CC (read-only or reserved).
+            # No auth needed for NTAG; stop_crypto1 is a safe no-op.
+            (stat, data) = self._reader.read(4)
             self._reader.stop_crypto1()
 
             if stat == self._reader.OK and data:
