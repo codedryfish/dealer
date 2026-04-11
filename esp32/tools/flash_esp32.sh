@@ -68,11 +68,8 @@ curl -sSL "https://raw.githubusercontent.com/wendlers/micropython-mfrc522/master
 curl -sSL "https://raw.githubusercontent.com/micropython/micropython-lib/master/micropython/drivers/display/ssd1306/ssd1306.py" \
   -o "$TMPDIR/ssd1306.py"
 
-# urequests HTTP client (micropython/micropython-lib)
-curl -sSL "https://raw.githubusercontent.com/micropython/micropython-lib/master/python-ecosys/urequests/urequests.py" \
-  -o "$TMPDIR/urequests.py"
-
 echo "Libraries downloaded."
+# Note: urequests is frozen into the ESP32-S3 firmware — no download needed.
 
 # ── Build config.py for this station ────────────────────────────────────────
 cp esp32/station/config.py "$TMPDIR/config.py"
@@ -94,8 +91,6 @@ echo "=== Uploading firmware for Station $STATION ==="
 # Third-party libraries
 upload "$TMPDIR/mfrc522.py"  "mfrc522.py"
 upload "$TMPDIR/ssd1306.py"  "ssd1306.py"
-upload "$TMPDIR/urequests.py" "urequests.py"
-
 # Station config (patched with correct STATION_ID)
 upload "$TMPDIR/config.py"   "config.py"
 
