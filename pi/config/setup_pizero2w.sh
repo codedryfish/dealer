@@ -88,10 +88,15 @@ nmcli con modify dealer-ap \
   802-11-wireless.mode ap \
   802-11-wireless.band bg \
   wifi-sec.key-mgmt wpa-psk \
+  wifi-sec.proto rsn \
+  wifi-sec.pairwise ccmp \
+  wifi-sec.group ccmp \
   wifi-sec.psk "dealermeplease" \
   ipv4.method shared \
   ipv4.address 192.168.4.1/24 \
   connection.autoconnect yes
+# proto rsn / pairwise+group ccmp = WPA2-only (AES).
+# Without this, nmcli may default to WPA (TKIP) which ESP-IDF 5.x rejects.
 
 echo ""
 echo "=== Setup complete! Rebooting in 5 seconds... ==="
