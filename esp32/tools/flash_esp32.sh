@@ -84,7 +84,7 @@ with open(path) as f:
 patch_old = '\t\telse:\n\t\t\traise RuntimeError("Unsupported platform")'
 patch_new = (
     '\t\telif \'esp32\' in board.lower():\n'
-    '\t\t\tself.spi = SPI(1, baudrate=1000000, polarity=0, phase=0,\n'
+    '\t\t\tself.spi = SPI(1, baudrate=100000, polarity=0, phase=0,\n'
     '\t\t\t\tsck=self.sck, mosi=self.mosi, miso=self.miso)\n'
     '\t\telse:\n'
     '\t\t\traise RuntimeError("Unsupported platform")'
