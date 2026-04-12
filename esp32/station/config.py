@@ -28,9 +28,8 @@ PIN_RFID_MISO = 13  # Was 19 — USB D-
 PIN_RFID_RST  = 4
 
 # OLED (SSD1306) — I2C
-# GPIOs 38 & 39 are on the RIGHT side of the DevKitC, away from the RFID wires
-PIN_I2C_SDA = 38
-PIN_I2C_SCL = 39
+PIN_I2C_SDA = 6
+PIN_I2C_SCL = 7
 OLED_WIDTH = 128
 OLED_HEIGHT = 64
 OLED_ADDR = 0x3C
