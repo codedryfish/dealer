@@ -54,49 +54,23 @@ else
   echo "Found: $PORT"
 fi
 
-# ── Download third-party libraries ──────────────────────────────────────────
+# ── Prepare libraries ────────────────────────────────────────────────────────
 TMPDIR=$(mktemp -d)
 trap "rm -rf $TMPDIR" EXIT
 
-echo "Downloading MicroPython libraries..."
+echo "Preparing libraries..."
 
-# MFRC522 driver (wendlers/micropython-mfrc522)
-curl -sSL "https://raw.githubusercontent.com/wendlers/micropython-mfrc522/master/mfrc522.py" \
-  -o "$TMPDIR/mfrc522.py"
+# MFRC522: use our own driver (esp32/lib/mfrc522.py) — tested at 100kHz with
+# integer pin numbers. The wendlers library fails on ESP32-S3 because it passes
+# Pin objects to SPI() which causes 0xff reads on MicroPython v1.27.0.
+cp esp32/lib/mfrc522.py "$TMPDIR/mfrc522.py"
+echo "  mfrc522.py: using local driver (100kHz, NTAG-compatible)"
 
 # SSD1306 OLED driver (micropython/micropython-lib)
 curl -sSL "https://raw.githubusercontent.com/micropython/micropython-lib/master/micropython/drivers/display/ssd1306/ssd1306.py" \
   -o "$TMPDIR/ssd1306.py"
-
-echo "Libraries downloaded."
+echo "  ssd1306.py: downloaded"
 # Note: urequests is frozen into the ESP32-S3 firmware — no download needed.
-
-# ── Patch mfrc522.py for ESP32/ESP32-S3 ─────────────────────────────────────
-# The wendlers library only handles WiPy/LoPy/FiPy and ESP8266. It raises
-# RuntimeError("Unsupported platform") on ESP32/ESP32-S3. We inject an elif
-# branch before the else so it constructs SPI(1, ...) using the Pin objects
-# already built in __init__.
-python3 - "$TMPDIR/mfrc522.py" <<'PYEOF'
-import sys
-path = sys.argv[1]
-with open(path) as f:
-    src = f.read()
-patch_old = '\t\telse:\n\t\t\traise RuntimeError("Unsupported platform")'
-patch_new = (
-    '\t\telif \'esp32\' in board.lower():\n'
-    '\t\t\tself.spi = SPI(1, baudrate=100000, polarity=0, phase=0,\n'
-    '\t\t\t\tsck=self.sck, mosi=self.mosi, miso=self.miso)\n'
-    '\t\telse:\n'
-    '\t\t\traise RuntimeError("Unsupported platform")'
-)
-if patch_old in src:
-    src = src.replace(patch_old, patch_new)
-    with open(path, 'w') as f:
-        f.write(src)
-    print("  mfrc522.py patched: added ESP32/ESP32-S3 SPI support.")
-else:
-    print("  WARNING: mfrc522.py patch anchor not found — library may have changed upstream.")
-PYEOF
 
 # ── Build config.py for this station ────────────────────────────────────────
 cp esp32/station/config.py "$TMPDIR/config.py"
