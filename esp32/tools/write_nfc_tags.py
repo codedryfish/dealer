@@ -108,23 +108,28 @@ def run():
             time.sleep_ms(500)
             continue
 
+        # Wait indefinitely until the card is successfully written.
+        # Dot printed every second so you can see it's still trying.
         success = False
-        attempts = 0
-        while not success and attempts < 10:
-            attempts += 1
+        dots = 0
+        while not success:
             (stat, _) = reader.request(reader.REQIDL)
             if stat != reader.OK:
+                dots += 1
+                if dots % 5 == 0:
+                    print("  (waiting for card...)")
                 time.sleep_ms(200)
                 continue
             success = write_tag(reader, code)
+            if not success:
+                print("  (card detected but write failed — reposition and try again)")
+                time.sleep_ms(300)
 
-        if success:
-            print(f"  ✓ Written '{code}'")
-        else:
-            print(f"  ✗ FAILED after {attempts} attempts. Re-run this card later.")
+        print(f"  ✓ Written '{code}'")
 
-        # Wait for card to be removed
-        time.sleep_ms(800)
+        # Wait for card to be lifted before moving to the next one
+        print("  (remove card)")
+        time.sleep_ms(1000)
 
     print(f"\n=== Done! {total} cards programmed. ===")
     print("Run test_rfid.py to verify any card.")
