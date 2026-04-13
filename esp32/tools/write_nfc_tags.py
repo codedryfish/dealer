@@ -70,10 +70,10 @@ def write_tag(reader, data: str):
     Pages 0-3 on NTAG213/215 are UID/lock/CC — do not write there.
     No Mifare auth needed for NTAG tags.
     """
+    # Caller already ran request() — tag is in READY state waiting for SELECT.
+    # A second request() here would send REQA to a READY-state tag, which
+    # either gets ignored or resets it to IDLE, causing the write to fail.
     payload = list(data.encode("ascii")) + [0] * 14  # Pad to 16 bytes
-    (stat, tag_type) = reader.request(reader.REQIDL)
-    if stat != reader.OK:
-        return False
     (stat, uid) = reader.SelectTagSN()
     if stat != reader.OK:
         return False
