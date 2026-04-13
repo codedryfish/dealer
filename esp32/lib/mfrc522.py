@@ -156,7 +156,7 @@ class MFRC522:
 
     def anticoll(self):
         """Anti-collision loop. Returns (status, uid_bytes)."""
-        self._wr(self._BFRAME, 0x00)
+        self._wr(self._BFRAME, 0x00)  # full bytes, clear 7-bit flag left by request()
         stat, recv, bits = self._transceive([0x93, 0x20])
         if stat == self.OK and len(recv) == 5:
             if recv[0] ^ recv[1] ^ recv[2] ^ recv[3] == recv[4]:
@@ -170,6 +170,7 @@ class MFRC522:
             return self.ERR, []
         buf = [0x93, 0x70] + uid
         buf += self._crc(buf)
+        self._wr(self._BFRAME, 0x00)  # full bytes
         stat, recv, bits = self._transceive(buf)
         if stat == self.OK and bits == 0x18:
             return self.OK, uid[:4]
@@ -179,6 +180,7 @@ class MFRC522:
         """Read 16 bytes from NTAG page addr. Returns (status, data)."""
         buf = [0x30, addr]
         buf += self._crc(buf)
+        self._wr(self._BFRAME, 0x00)  # full bytes
         stat, recv, bits = self._transceive(buf)
         if stat == self.OK and len(recv) >= 4:
             return self.OK, recv
@@ -189,6 +191,7 @@ class MFRC522:
         Note: Mifare WRITE (0xA0) is different — don't use for NTAG stickers."""
         buf = [0xA2, addr] + list(data[:4])
         buf += self._crc(buf)
+        self._wr(self._BFRAME, 0x00)  # full bytes — must clear 7-bit flag from request()
         stat, recv, bits = self._transceive(buf)
         if stat == self.OK and bits == 4 and recv and (recv[0] & 0x0F) == 0x0A:
             return self.OK
